@@ -1,0 +1,113 @@
+.login {
+    width: 100%;
+    height: 90vh;
+    overflow: hidden;
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+
+    .slider {
+        width: 200%;
+        height: 100%;
+        display: flex;
+        transition: transform 0.5s ease-in-out;
+    }
+
+    .item {
+        width: 50%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 40px;
+    }
+
+    .item form {
+        width: 100%;
+        max-width: 400px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        margin-top: 5px;
+    }
+
+    .item form input {
+        padding: 15px;
+        border: none;
+        outline: none;
+        border-radius: 5px;
+        background-color: rgba(255, 255, 255, 0.1);
+        color: white;
+    }
+
+    .item form label {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        cursor: pointer;
+        text-decoration: underline;
+    }
+
+    .item form label img {
+        width: 50px;
+        height: 50px;
+        border-radius: 10px;
+        object-fit: cover;
+    }
+
+    .item form button {
+        padding: 15px;
+        border: none;
+        background-color: #1f8ef1;
+        color: white;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .item form .formSwitch {
+        font-size: 14px;
+        color: #ccc;
+        text-align: center;
+        display: none;
+    }
+
+    .item form .formSwitch .sign-up-switch,
+    .item form .formSwitch .sign-in-switch {
+        color: #1f8ef1;
+        cursor: pointer;
+    }
+}
+
+
+/* ✅ MEDIA QUERY: MOBILE ONLY */
+@media (max-width: 768px) {
+    .login {
+        flex-direction: column;
+        align-items: flex-start;
+        overflow: hidden;
+
+
+        .slider {
+            width: 200vw;
+            height: 100%;
+            display: flex;
+            flex-direction: row;
+            transition: transform 0.5s ease-in-out;
+        }
+
+        .item {
+            width: 100vw;
+            flex: 0 0 100vw;
+            height: 100%;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .item form .formSwitch {
+            display: inline;
+        }
+    }
+}
