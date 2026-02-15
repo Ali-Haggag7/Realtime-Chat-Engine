@@ -56,6 +56,9 @@ Follow these steps to set up the chat engine on your machine:
 git clone [https://github.com/Ali-Haggag7/Realtime-Chat-Engine.git](https://github.com/Ali-Haggag7/Realtime-Chat-Engine.git)
 cd Realtime-Chat-Engine
 
+# Install dependencies
+npm install
+
 ```
 2. **Environment Setup (.env)**
 ```bash
