@@ -15,7 +15,7 @@
 
   <br />
 
-  <img src="https://placehold.co/800x400/1a1a1a/FFF?text=Chat+Interface+Preview+(Add+Image)" alt="Project Preview" width="100%" style="border-radius: 10px;" />
+  <img src="/chat-firebase-1.jpeg" alt="Project Preview" width="100%" style="border-radius: 10px;" />
 
 </div>
 
