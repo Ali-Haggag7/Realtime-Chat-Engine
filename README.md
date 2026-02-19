@@ -87,7 +87,7 @@ The app will launch at http://localhost:5173
 
 | **Chat Room** | **Mobile View** |
 | :---: | :---: |
-| <img src="https://placehold.co/400x250/1a1a1a/FFF?text=Chat+Room+Preview" width="100%" /> | <img src="https://placehold.co/400x250/1a1a1a/FFF?text=Mobile+UI+Preview" width="100%" /> |
+| <img src="/chat-firebase-1.jpeg" width="100%" /> | <img src="/chat-firebase-2.jpeg" width="100%" /> |
 
 ---
 
