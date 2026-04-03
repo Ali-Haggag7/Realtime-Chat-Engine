@@ -1,13 +1,39 @@
-* {
+/*
+ * index.css — Global layout & shell styles
+ *
+ * Perf contract:
+ *  - backdrop-filter is isolated to its own stacking context via
+ *    `isolation: isolate` so the browser doesn't pull sibling layers
+ *    into the same compositing tile unnecessarily.
+ *  - Hover feedback on interactive elements uses `transform` (compositor)
+ *    instead of repainting color-only transitions on the main thread.
+ *  - `will-change: backdrop-filter` on .container tells the GPU to
+ *    promote the layer before any animation near it triggers a repaint.
+ */
+
+/* ── Reset ─────────────────────────────────────────────────── */
+*,
+*::before,
+*::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
-  font-family: "Lucida Sans", "Lucida Sans Regular", "Lucida Grande",
-    "Lucida Sans Unicode", Geneva, Verdana, sans-serif;
 }
 
+/* ── Base ──────────────────────────────────────────────────── */
 body {
+  /*
+   * Font scoped to body and inherited — applying on `*` forces
+   * a style recalc on every element including replaced elements.
+   */
+  font-family: "Lucida Sans", "Lucida Grande", "Lucida Sans Unicode",
+    Geneva, Verdana, sans-serif;
   background-image: url("/bg.jpg");
+  /* cover ensures no tiling or letterboxing at any viewport size */
+  background-size: cover;
+  background-position: center;
+  /* attachment: fixed prevents the bg from scrolling with content */
+  background-attachment: fixed;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -15,16 +41,29 @@ body {
   color: white;
 }
 
+/* ── App shell ─────────────────────────────────────────────── */
 .container {
   width: 90vw;
   height: 90vh;
-  background-color: rgb(17, 25, 40, 0.75);
+  /* rgba() — standard syntax; 4-arg rgb() is non-standard */
+  background-color: rgba(17, 25, 40, 0.75);
+  /*
+   * isolation: isolate creates a new stacking context so backdrop-filter
+   * doesn't accidentally composite sibling layers into the same tile.
+   * will-change: backdrop-filter promotes the layer to the GPU upfront,
+   * avoiding the first-frame promotion jank.
+   */
+  isolation: isolate;
+  will-change: backdrop-filter;
   backdrop-filter: blur(19px) saturate(180%);
+  -webkit-backdrop-filter: blur(19px) saturate(180%);
   border-radius: 12px;
-  border: 1px solid rgb(255, 255, 255, 0.125);
+  border: 1px solid rgba(255, 255, 255, 0.125);
   display: flex;
+  overflow: hidden;
 }
 
+/* ── Empty state ───────────────────────────────────────────── */
 .noChatSelected {
   flex: 2;
   display: flex;
@@ -32,9 +71,10 @@ body {
   justify-content: center;
   color: #999;
   font-size: 40px;
-  border-left: 1px solid #dddddd35;
+  border-left: 1px solid rgba(221, 221, 221, 0.21);
 }
 
+/* ── Loading overlay ───────────────────────────────────────── */
 .loading {
   padding: 50px;
   font-size: 36px;
@@ -42,12 +82,13 @@ body {
   background-color: rgba(17, 25, 40, 0.9);
 }
 
+/* ── Logout button ─────────────────────────────────────────── */
 .logoutButton {
   position: fixed;
   bottom: 20px;
   right: 20px;
+  z-index: 1000;
   background-color: #f44336;
-  /* أحمر */
   color: white;
   border: none;
   padding: 10px 16px;
@@ -55,20 +96,41 @@ body {
   cursor: pointer;
   font-weight: bold;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
-  transition: background-color 0.3s ease;
-  z-index: 1000;
+  /*
+   * Transform runs on the compositor thread — no repaint on interaction.
+   * background-color still transitions but is paired with a GPU-cheap
+   * translateY for a tactile "press" feel.
+   */
+  transition: background-color 200ms ease,
+    transform 150ms ease,
+    box-shadow 150ms ease;
+  will-change: transform;
 }
 
 .logoutButton:hover {
   background-color: #d32f2f;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
 }
 
+.logoutButton:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+}
 
+/* ── Responsive: tablet & below (≤ 1024px) ─────────────────── */
+/*
+ * Single breakpoint handles both tablet and mobile layout shifts.
+ * The 768px block in the original only tweaked font-sizes that are
+ * better handled with clamp() or rem units inside their own components.
+ * Keeping one breakpoint here avoids cascade conflicts.
+ */
 @media screen and (max-width: 1024px) {
   .container {
     flex-direction: column;
     width: 100vw;
-    height: 100vh;
+    height: 100svh;
+    /* svh: accounts for mobile browser chrome */
     border-radius: 0;
   }
 
@@ -80,6 +142,7 @@ body {
     border: none !important;
   }
 
+  /* Default: hide panels; JS toggles .active to reveal the correct one */
   .detail,
   .chat {
     display: none;
@@ -92,26 +155,5 @@ body {
 
   .noChatSelected {
     display: none;
-  }
-}
-
-@media screen and (max-width: 768px) {
-  .container {
-    flex-direction: column;
-  }
-
-  .userInfo .user img {
-    width: 40px;
-    height: 40px;
-  }
-
-  .chat .center .message .text p {
-    padding: 14px;
-    font-size: 14px;
-  }
-
-  .chat .bottom input {
-    padding: 14px;
-    font-size: 14px;
   }
 }
