@@ -1,47 +1,84 @@
+/*
+ * userInfo.css
+ *
+ * Perf contract:
+ *  - Modal enter/exit uses opacity + visibility + transform (scale).
+ *    All three are compositor-eligible — zero layout or paint on toggle.
+ *  - will-change: opacity, transform on .modal and .modalContent primes
+ *    the GPU layer before first open, eliminating first-frame jank.
+ *  - pointer-events: none when hidden prevents the invisible backdrop
+ *    from intercepting clicks on elements beneath it.
+ *  - button transition scoped to background-color + transform only.
+ */
+
+/* ── User info bar ─────────────────────────────────────────── */
 .userInfo {
     padding: 20px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-
-    .user {
-        display: flex;
-        align-items: center;
-        gap: 20px;
-
-        img {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            object-fit: cover;
-        }
-    }
-
-    .icons {
-        display: flex;
-        gap: 20px;
-
-        img {
-            width: 20px;
-            height: 20px;
-            cursor: pointer;
-        }
-    }
+    flex-shrink: 0;
 }
 
+.userInfo .user {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.userInfo .user img {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.userInfo .icons {
+    display: flex;
+    gap: 20px;
+}
+
+.userInfo .icons img {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 150ms ease;
+}
+
+.userInfo .icons img:hover {
+    opacity: 1;
+}
+
+/* ── Modal backdrop ────────────────────────────────────────── */
+/*
+ * Stays mounted. Hidden state: invisible + non-interactive.
+ * will-change primes the GPU layer before the first open so the
+ * compositor doesn't pay a promotion cost mid-animation.
+ */
 .modal {
     position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
+    inset: 0;
     background: rgba(0, 0, 0, 0.6);
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 999;
+    will-change: opacity;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 250ms ease,
+        visibility 250ms ease;
 }
 
+.modal.modal--open {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+/* ── Modal panel ───────────────────────────────────────────── */
 .modalContent {
     background: #2c2f4a;
     padding: 30px;
@@ -52,18 +89,67 @@
     flex-direction: column;
     gap: 15px;
     color: white;
+    /*
+     * Scale gives a "pop in" feel without moving the element across the
+     * screen. Scale is compositor-eligible — no layout or paint cost.
+     */
+    will-change: transform, opacity;
+    transform: scale(0.95);
+    transition: transform 250ms cubic-bezier(0.34, 1.28, 0.64, 1),
+        opacity 250ms ease;
+    opacity: 0;
 }
 
-.modalContent input {
+.modal.modal--open .modalContent {
+    transform: scale(1);
+    opacity: 1;
+}
+
+/* ── Form labels ───────────────────────────────────────────── */
+.modalContent label {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+/* ── Avatar preview row ────────────────────────────────────── */
+.avatarPreviewRow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.avatarPreview {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    flex-shrink: 0;
+}
+
+/* ── Text inputs ───────────────────────────────────────────── */
+.modalContent input[type="text"],
+.modalContent input[type="file"] {
     width: 100%;
     padding: 10px;
-    margin-top: 2px;
     background: white;
     border: none;
     border-radius: 5px;
     color: black;
+    font-size: 14px;
 }
 
+.modalContent input[type="file"] {
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    padding: 8px;
+}
+
+/* ── Action buttons ────────────────────────────────────────── */
 .modalContent .buttons {
     display: flex;
     justify-content: space-between;
@@ -78,17 +164,31 @@
     cursor: pointer;
     background: #3b82f6;
     color: white;
-    transition: background-color 0.3s ease;
+    font-size: 14px;
+    /* Scoped to only the properties that actually change */
+    transition: background-color 200ms ease,
+        transform 150ms ease;
+    will-change: transform;
 }
 
-.modalContent button:hover {
+.modalContent button:hover:not(:disabled) {
     background-color: #2563eb;
+    transform: translateY(-1px);
+}
+
+.modalContent button:active:not(:disabled) {
+    transform: translateY(0);
+}
+
+.modalContent button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
 }
 
 .modalContent button:last-child {
     background: #6b7280;
 }
 
-.modalContent button:last-child:hover {
+.modalContent button:last-child:hover:not(:disabled) {
     background-color: #4b5563;
 }
