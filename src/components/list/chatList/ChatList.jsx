@@ -1,131 +1,160 @@
-import { useEffect, useState } from "react"
-import "./chatList.css"
-import AddUser from "./addUser/AddUser"
-import { useUserStore } from "../../../lib/userStore"
-import { doc, getDoc, onSnapshot, updateDoc } from "firebase/firestore"
-import { db } from "../../../lib/firebase"
-import { useChatStore } from "../../../lib/chatStore"
+import { useEffect, useState, useCallback, useMemo, useDeferredValue, memo } from "react";
+import { doc, getDoc, onSnapshot, updateDoc } from "firebase/firestore";
+import { db } from "../../../lib/firebase";
+import { useUserStore } from "../../../lib/userStore";
+import { useChatStore } from "../../../lib/chatStore";
+import AddUser from "./addUser/AddUser";
+import "./chatList.css";
 
+// --- Memoized Child Component (Zero-Jank Rendering) ---
+// Extracted to prevent the inline-function reallocation in the map loop.
+const ChatItem = memo(({ chat, currentUserId, onSelect }) => {
+    const isBlocked = chat.user.blocked?.includes(currentUserId);
+    const avatarSrc = isBlocked || !chat.user.avatar ? "./avatar.png" : chat.user.avatar;
+    const username = isBlocked ? "User" : chat.user.username;
+
+    // Stable ref to prevent layout thrashing on click
+    const handleClick = useCallback(() => {
+        onSelect(chat);
+    }, [chat, onSelect]);
+
+    return (
+        <button
+            className="item"
+            onClick={handleClick}
+            data-seen={chat.isSeen}
+            aria-label={`Chat with ${username}`}
+        >
+            <img src={avatarSrc} alt="" loading="lazy" decoding="async" />
+            <div className="texts">
+                <span>{username}</span>
+                <p>{chat.lastMessage}</p>
+            </div>
+            {!chat.isSeen && <div className="unread-dot" />}
+        </button>
+    );
+});
+ChatItem.displayName = "ChatItem";
+
+// --- Main Component ---
 const ChatList = () => {
+    const [chats, setChats] = useState([]);
+    const [addMode, setAddMode] = useState(false);
+    const [input, setInput] = useState("");
 
-    const [chats, setChats] = useState([])
-    const [addMode, setAddMode] = useState(false)
-    const [input, setInput] = useState("")
+    // React 18: Offloads the filtering math to a background priority, 
+    // ensuring the text input never stutters while typing.
+    const deferredInput = useDeferredValue(input);
 
-    const { currentUser } = useUserStore()
-    const { chatId, changeChat } = useChatStore()
+    const { currentUser } = useUserStore();
+    const { changeChat } = useChatStore();
 
     useEffect(() => {
         if (!currentUser?.id) return;
 
-        const unSub = onSnapshot(
-            doc(db, "userchats", currentUser.id), async (res) => {
+        const userChatsRef = doc(db, "userchats", currentUser.id);
 
-                if (!res.exists()) {
-                    setChats([]); // لو مفيش شات، خليها فاضية وخلاص
-                    return;
-                }
+        const unSub = onSnapshot(userChatsRef, async (res) => {
+            if (!res.exists()) {
+                setChats([]);
+                return;
+            }
 
-                const items = res.data().chats || [];
+            const items = res.data().chats || [];
 
-                const promises = items.map(async (item) => {
+            // Executes the heavy reads in parallel to cut down network waterfalls
+            const chatData = await Promise.all(
+                items.map(async (item) => {
                     const userDocRef = doc(db, "users", item.receiverId);
                     const userDocSnap = await getDoc(userDocRef);
+                    return { ...item, user: userDocSnap.data() };
+                })
+            );
 
-                    const user = userDocSnap.data();
+            setChats(chatData.sort((a, b) => b.updatedAt - a.updatedAt));
+        });
 
-                    return { ...item, user };
-                });
+        return () => unSub();
+    }, [currentUser?.id]);
 
-                const chatData = await Promise.all(promises);
+    // Memoized so we don't recreate this function on every render
+    const handleSelect = useCallback(async (selectedChat) => {
+        if (!currentUser?.id) return;
 
-                setChats(chatData.sort((a, b) => b.updatedAt - a.updatedAt));
-            }
-        );
-
-        return () => {
-            unSub();
-        };
-    }, [currentUser?.id])
-
-
-    const handleSelect = async (chat) => {
         const userChats = chats.map((item) => {
-            const { user, ...rest } = item
-            return rest
-        })
+            const { user, ...rest } = item;
+            return rest;
+        });
 
-        const chatIndex = userChats.findIndex(
-            (item) => item.chatId === chat.chatId
-        )
+        const chatIndex = userChats.findIndex((item) => item.chatId === selectedChat.chatId);
+        if (chatIndex === -1) return;
 
-        userChats[chatIndex].isSeen = true
-
-        const userChatsRef = doc(db, "userchats", currentUser.id)
+        userChats[chatIndex].isSeen = true;
 
         try {
-            await updateDoc(userChatsRef, {
+            await updateDoc(doc(db, "userchats", currentUser.id), {
                 chats: userChats,
-            })
-            changeChat(chat.chatId, chat.user)
+            });
+            changeChat(selectedChat.chatId, selectedChat.user);
         } catch (err) {
-            console.log(err)
+            console.error("Failed to update chat seen status:", err);
         }
-    }
+    }, [chats, currentUser?.id, changeChat]);
 
-    const filteredChats = chats.filter((c) =>
-        c.user.username.toLowerCase().includes(input.toLowerCase())
-    )
+    // Memoize the filtered list so it only recalculates when chats or the deferred keystroke changes
+    const filteredChats = useMemo(() => {
+        const lowerInput = deferredInput.toLowerCase();
+        return chats.filter((c) =>
+            c.user.username.toLowerCase().includes(lowerInput)
+        );
+    }, [chats, deferredInput]);
 
     return (
         <div className="chatList">
             <div className="search">
                 <div className="searchBar">
-                    <img src="./search.png" alt="" />
+                    <img src="./search.png" alt="Search icon" />
                     <input
                         type="text"
                         placeholder="Search"
                         onChange={(e) => setInput(e.target.value)}
+                        aria-label="Search chats"
                     />
                 </div>
-                <img
-                    src={addMode ? "./minus.png" : "./plus.png"}
-                    alt=""
+                <button
                     className="add"
                     onClick={() => setAddMode((prev) => !prev)}
-                />
-            </div>
-            {filteredChats.map((chat) => (
-                <div
-                    className="item"
-                    key={chat.chatId}
-                    onClick={() => handleSelect(chat)}
-                    style={{
-                        backgroundColor: chat?.isSeen ? "transparent" : "#5183fe",
-                    }}
+                    aria-label={addMode ? "Close add user" : "Add user"}
+                    aria-expanded={addMode}
                 >
-                    <img
-                        src={
-                            chat.user.blocked?.includes(currentUser.id)
-                                ? "./avatar.png"
-                                : chat.user.avatar || "./avatar.png"
-                        }
-                        alt=""
+                    <img src={addMode ? "./minus.png" : "./plus.png"} alt="" />
+                </button>
+            </div>
+
+            <div className="list-container">
+                {filteredChats.map((chat) => (
+                    <ChatItem
+                        key={chat.chatId}
+                        chat={chat}
+                        currentUserId={currentUser.id}
+                        onSelect={handleSelect}
                     />
-                    <div className="texts">
-                        <span>
-                            {chat.user.blocked?.includes(currentUser.id)
-                                ? "User"
-                                : chat.user.username}
-                        </span>
-                        <p>{chat.lastMessage}</p>
-                    </div>
+                ))}
+            </div>
+
+            {/* Mount-Once Rule: Stays in the DOM. Toggled strictly via GPU CSS. */}
+            <div
+                className="add-user-overlay"
+                data-visible={addMode}
+                onClick={() => setAddMode(false)} /* Closes modal when clicking the dark background */
+            >
+                {/* e.stopPropagation() prevents the modal from closing when you click inside the form */}
+                <div onClick={(e) => e.stopPropagation()} style={{ width: "100%", display: "flex", justifyContent: "center" }}>
+                    <AddUser />
                 </div>
-            ))}
-
-            {addMode && <AddUser />}
+            </div>
         </div>
-    )
-}
+    );
+};
 
-export default ChatList
+export default ChatList;

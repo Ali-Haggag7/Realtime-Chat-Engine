@@ -1,77 +1,202 @@
+/* Root Variables for Consistency & Easy Theming */
+:root {
+    --bg-search: rgba(17, 25, 40, 0.5);
+    --border-light: rgba(221, 221, 221, 0.15);
+    --primary-blue: #5183fe;
+    --transition-spring: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    --transition-fast: 0.15s ease-out;
+}
+
 .chatList {
     flex: 1;
     overflow-y: auto;
     scrollbar-width: none;
     -ms-overflow-style: none;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
 
-    .search {
-        display: flex;
-        align-items: center;
-        gap: 20px;
-        padding: 20px;
+.chatList::-webkit-scrollbar {
+    display: none;
+}
 
-        .searchBar {
-            flex: 1;
-            background-color: rgba(17, 25, 40, 0.5);
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            border-radius: 10px;
-            padding: 10px;
+.search {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 20px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+}
 
-            input {
-                background-color: transparent;
-                border: none;
-                outline: none;
-                color: white;
-                flex: 1;
-            }
+.searchBar {
+    flex: 1;
+    background-color: var(--bg-search);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border-radius: 12px;
+    padding: 10px 16px;
+    transition: background-color var(--transition-fast);
+}
 
-            img {
-                width: 20px;
-                height: 20px;
-            }
-        }
+.searchBar:focus-within {
+    background-color: rgba(17, 25, 40, 0.8);
+    box-shadow: 0 0 0 2px var(--primary-blue);
+}
 
-        .add {
-            width: 36px;
-            height: 36px;
-            background-color: rgba(17, 25, 40, 0.5);
-            padding: 10px;
-            border-radius: 10px;
-            cursor: pointer;
-            z-index: 1000;
-        }
-    }
+.searchBar input {
+    background-color: transparent;
+    border: none;
+    outline: none;
+    color: white;
+    flex: 1;
+    font-size: 15px;
+}
 
-    .item {
-        display: flex;
-        align-items: center;
-        gap: 20px;
-        padding: 20px;
-        cursor: pointer;
-        border-bottom: 1px solid #dddddd35;
+.searchBar img {
+    width: 20px;
+    height: 20px;
+    opacity: 0.6;
+}
 
-        img {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            object-fit: cover;
-        }
+.add {
+    width: 44px;
+    height: 44px;
+    background-color: var(--bg-search);
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    display: grid;
+    place-items: center;
+    transition: transform var(--transition-spring), background-color var(--transition-fast);
+    will-change: transform;
+}
 
-        .texts {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
+.add:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
 
-            span {
-                font-weight: 500;
-            }
+.add:active {
+    transform: scale(0.92);
+}
 
-            p {
-                font-size: 14px;
-                font-weight: 300;
-            }
-        }
-    }
+.add img {
+    width: 20px;
+    height: 20px;
+}
+
+/* List Container isolates scrolling */
+.list-container {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    align-items: stretch;
+}
+
+/* --- BULLETPROOF CHAT ITEM --- */
+.chatList .item {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 16px;
+    padding: 16px 20px;
+    width: 100%;
+    min-height: 72px;
+    border: none;
+    background: transparent;
+    border-bottom: 1px solid var(--border-light);
+    color: inherit;
+    cursor: pointer;
+    text-align: left;
+    position: relative;
+    transition: background-color var(--transition-fast);
+}
+
+.chatList .item:hover {
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+.chatList .item:active {
+    background-color: rgba(255, 255, 255, 0.06);
+}
+
+.chatList .item[data-seen="false"] {
+    background-color: rgba(81, 131, 254, 0.1);
+}
+
+.chatList .item[data-seen="false"] .unread-dot {
+    position: absolute;
+    right: 20px;
+    width: 10px;
+    height: 10px;
+    background-color: var(--primary-blue);
+    border-radius: 50%;
+    box-shadow: 0 0 8px rgba(81, 131, 254, 0.6);
+}
+
+.chatList .item img {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+    flex-shrink: 0;
+    /* Forces the image to stay round */
+    background-color: #2a2a2a;
+    transform: translateZ(0);
+}
+
+.chatList .item .texts {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+    /* Pushes the text to fill the remaining horizontal space */
+    overflow: hidden;
+}
+
+.chatList .item .texts span {
+    font-weight: 600;
+    font-size: 16px;
+    color: #ffffff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.chatList .item .texts p {
+    font-size: 14px;
+    font-weight: 400;
+    color: #a0a0a0;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* GPU-Accelerated Mount-Once Overlay */
+.add-user-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    background-color: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    will-change: opacity;
+}
+
+.add-user-overlay[data-visible="true"] {
+    opacity: 1;
+    pointer-events: auto;
 }

@@ -1,70 +1,107 @@
-.addUserWrapper {
-    position: fixed;
+/* The container just takes up the space given by the global overlay */
+.add-user-container {
     display: flex;
-    inset: 0;
     justify-content: center;
     align-items: center;
-    background-color: rgba(0, 0, 0, 0.3);
+    width: 100%;
+}
 
-    .addUser {
-        width: max-content;
-        height: max-content;
-        padding: 30px;
-        background-color: rgba(17, 25, 40, 0.781);
-        border-radius: 10px;
+.add-user-modal {
+    width: 100%;
+    max-width: 420px;
+    /* Wider, cleaner modal */
+    padding: 32px;
+    background-color: rgba(17, 25, 40, 0.98);
+    border-radius: 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.6);
 
-        h3 {
-            margin-bottom: 15px;
-        }
+    /* Smooth pop-in animation */
+    transform: translateY(20px) scale(0.95);
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    will-change: transform;
+}
 
-        form {
-            display: flex;
-            gap: 20px;
+/* When the parent overlay is visible, trigger the modal pop-in */
+[data-visible="true"] .add-user-modal {
+    transform: translateY(0) scale(1);
+}
 
-            input {
-                padding: 20px;
-                border-radius: 10px;
-                border: none;
-                outline: none;
-            }
+.add-user-modal h3 {
+    margin-bottom: 24px;
+    font-weight: 600;
+    font-size: 20px;
+    color: #ffffff;
+}
 
-            button {
-                padding: 20px;
-                border-radius: 10px;
-                background-color: #1a73e8;
-                color: white;
-                border: none;
-                cursor: pointer;
-            }
-        }
+.add-user-modal form {
+    display: flex;
+    gap: 12px;
+}
 
-        .user {
-            margin-top: 50px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+.add-user-modal input {
+    flex: 1;
+    min-height: 44px;
+    padding: 0 16px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background-color: rgba(255, 255, 255, 0.05);
+    color: #ffffff;
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+}
 
-            .user-details {
-                display: flex;
-                align-items: center;
-                gap: 20px;
+.add-user-modal input:focus {
+    border-color: #5183fe;
+    background-color: rgba(255, 255, 255, 0.1);
+}
 
-                img {
-                    width: 50px;
-                    height: 50px;
-                    border-radius: 50%;
-                    object-fit: cover;
-                }
-            }
+.add-user-modal button {
+    min-height: 44px;
+    padding: 0 24px;
+    border-radius: 10px;
+    background-color: #5183fe;
+    color: white;
+    font-weight: 500;
+    font-size: 15px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.2s ease;
+}
 
-            button {
-                padding: 10px;
-                border-radius: 10px;
-                background-color: #1a73e8;
-                color: white;
-                border: none;
-                cursor: pointer;
-            }
-        }
-    }
+.add-user-modal button:hover:not(:disabled) {
+    background-color: #3b6ae0;
+}
+
+.add-user-modal button:active:not(:disabled) {
+    transform: scale(0.95);
+}
+
+/* User Result Styles */
+.user-result {
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.user-details {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.user-details img {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.user-details span {
+    font-weight: 500;
+    color: #ffffff;
 }

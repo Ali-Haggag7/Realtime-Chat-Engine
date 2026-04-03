@@ -26,7 +26,7 @@ import "./login.css";
 // ---------------------------------------------------------------------------
 
 const SignInForm = memo(({ loading, onSubmit, onSwitch }) => (
-    <div className="item">
+    <div className="login-item">
         <h2>Welcome back,</h2>
         <form onSubmit={onSubmit}>
             <input type="email" placeholder="Email" name="email" required />
@@ -46,7 +46,7 @@ const SignInForm = memo(({ loading, onSubmit, onSwitch }) => (
 SignInForm.displayName = "SignInForm";
 
 const SignUpForm = memo(({ loading, avatar, onAvatarChange, onSubmit, onSwitch }) => (
-    <div className="item">
+    <div className="login-item">
         <h2>Create an Account</h2>
         <form onSubmit={onSubmit}>
             <label htmlFor="file">

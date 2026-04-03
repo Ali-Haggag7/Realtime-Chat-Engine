@@ -1,14 +1,18 @@
-import "./list.css"
-import Userinfo from "./userInfo/Userinfo"
-import ChatList from "./chatList/ChatList"
+import { memo } from "react";
+import "./list.css";
+import Userinfo from "./userInfo/Userinfo";
+import ChatList from "./chatList/ChatList";
 
-const List = () => {
+// Memoized purely presentational wrapper. 
+// Prevents global state changes from re-rendering the heavy ChatList tree.
+const List = memo(() => {
     return (
-        <div className="list">
+        <aside className="list" aria-label="Sidebar navigation">
             <Userinfo />
             <ChatList />
-        </div>
-    )
-}
+        </aside>
+    );
+});
+List.displayName = "List";
 
-export default List
+export default List;

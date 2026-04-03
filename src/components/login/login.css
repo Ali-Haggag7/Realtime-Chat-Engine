@@ -70,7 +70,7 @@
 }
 
 /* ── Panel ─────────────────────────────────────────────────── */
-.item {
+.login-item {
     width: 50%;
     height: 100%;
     display: flex;
